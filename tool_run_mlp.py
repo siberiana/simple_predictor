@@ -53,6 +53,7 @@ def run(args):
         trainer = Trainer(mlp_model, optimizer=args.optimizer, loss=args.loss,
                           learning_rate=args.learning_rate, reg_rate=1e-5,
                           keep_prob=args.keep_prob)
+        tf.set_random_seed(8)
         tf.global_variables_initializer().run()
         saver = tf.train.Saver()
         no_improvement = 0
