@@ -1,4 +1,4 @@
-"""This runs an MLP with doc2vec features"""
+"""This runs an MLP on feature vectors"""
 from __future__ import print_function
 import argparse
 from os.path import join as join_path
@@ -22,9 +22,9 @@ def run(args):
     output_dir = args.output
     if args.verbose:
         print('Loading the data...')
-    train_feat, train_labels, train_ids = load(join_path(input_dir, 'train'))
-    dev_feat, dev_labels, dev_ids = load(join_path(input_dir, 'dev'))
-    test_feat, test_labels, test_ids = load(join_path(input_dir, 'test'))
+    train_feat, train_labels, train_ids = load(join_path(input_dir, 'train'), True)
+    dev_feat, dev_labels, dev_ids = load(join_path(input_dir, 'dev'), True)
+    test_feat, test_labels, test_ids = load(join_path(input_dir, 'test'), True)
     if args.verbose:
         print('Done.')
     input_dim = int(len(train_feat[0]))
@@ -51,7 +51,8 @@ def run(args):
     with tf.Session(graph=tf.get_default_graph()) as session:
         mlp_model = MlpPredictor(units, args.keep_prob)
         trainer = Trainer(mlp_model, optimizer=args.optimizer, loss=args.loss,
-                          learning_rate=args.learning_rate, reg_rate=1e-5)
+                          learning_rate=args.learning_rate, reg_rate=1e-5,
+                          keep_prob=args.keep_prob)
         tf.global_variables_initializer().run()
         saver = tf.train.Saver()
         no_improvement = 0
@@ -88,6 +89,7 @@ def run(args):
                         print('Dev loss: {}, dev P@1: {}, dev MRR: {}'.format(dev_loss, dev_p1,
                                                                               dev_mrr))
                     no_improvement += 1
+                train_batch.randomize_data()
         if args.verbose:
             print('Restoring session from', saved_session)
         saver.restore(session, saved_session)
@@ -100,8 +102,9 @@ def run(args):
 
         print('Test P1 and MRR: ', test_p1, test_mrr)
         print(
-            'RES\t{}\t{}\t{}\t{}\t{}'.format(args.learning_rate, best_dev_p1, best_dev_mrr, test_p1,
-                                             test_mrr))
+            'RES\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(input_dir, args.units,
+                                                         args.learning_rate, 100*best_dev_p1,
+                                                         100*best_dev_mrr, 100*test_p1, 100*test_mrr))
 
         fout_test = open(join_path(output_dir, 'test_predictions.txt'), 'w')
         for k in xrange(len(test_ids)):
@@ -148,10 +151,10 @@ def main():
     parser.add_argument('--reg_rate', help='L2 regularization rate', type=float, default=1e-06)
     parser.add_argument('--learning_rate', help='initial learning rate', type=float, default=0.001)
     parser.add_argument('--wait_epochs', help='wait that many epochs for improvement, default: 15',
-                        type=int, default=10)
+                        type=int, default=15)
     parser.add_argument('--eval_every',
                         help='how often (in steps) the evaluation on the dev set is '
-                             'performed, default: 1000', type=int, default=500)
+                             'performed, default: 1000', type=int, default=400)
 
     parser.add_argument('--output', type=str, default='')
 

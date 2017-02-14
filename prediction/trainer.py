@@ -24,7 +24,9 @@ class Trainer(object):
             momentum (float): momentum, needed only if momentum optimizer is used, default: 0.9.
     """
     def __init__(self, model, optimizer='SGD', loss='log', learning_rate=0.005, reg_rate=1e-5,
-                 momentum=0.9):
+                 momentum=0.9, keep_prob=0.5):
+
+        self.keep_prob = keep_prob
         self.model = model
         assert isinstance(model, MlpPredictor)
         self.labels = tf.placeholder(tf.float32, shape=(None, NUM_LABELS), name='labels')
@@ -76,9 +78,10 @@ class Trainer(object):
             self.optimizer = tf.train.GradientDescentOptimizer(
                 learning_rate=learning_rate).minimize(self.loss)
 
-    def _step(self, session, batch_x, batch_labels, train):
+    def _step(self, session, batch_x, batch_labels, train, keep_prob=1.0):
         feed_dict = {self.model.x: batch_x,
-                     self.labels: batch_labels}
+                     self.labels: batch_labels,
+                     self.model.keep_prob: keep_prob}
         if train:
             _, loss, predictions = session.run([self.optimizer, self.loss,
                                                 self.model.prediction], feed_dict=feed_dict)
@@ -89,10 +92,12 @@ class Trainer(object):
 
     def training_step(self, session, batch_x, batch_labels):
         """ training step """
-        loss, predictions = self._step(session, batch_x, batch_labels, train=True)
+        loss, predictions = self._step(session, batch_x, batch_labels, train=True,
+                                       keep_prob=self.keep_prob)
         return loss, predictions
 
     def eval_step(self, session, batch_x, batch_labels):
         """ evaluation step (no gradient updates) """
-        loss, predictions = self._step(session, batch_x, batch_labels, train=False)
+        loss, predictions = self._step(session, batch_x, batch_labels, train=False,
+                                       keep_prob=1.0)
         return loss, predictions

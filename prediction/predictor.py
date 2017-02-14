@@ -17,5 +17,6 @@ class MlpPredictor(object):
         """
         self.units = units
         self.x = tf.placeholder(shape=(None, None), dtype=tf.float32, name='x')
-        self.similarity, self.params = mlp(self.x, units, keep_prob=keep_prob)
+        self.keep_prob = tf.placeholder(dtype=tf.float32, name='keep_prob')
+        self.similarity, self.params = mlp(self.x, units, keep_prob=self.keep_prob)
         self.prediction = tf.nn.softmax(self.similarity)
