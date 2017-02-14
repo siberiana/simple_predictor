@@ -12,7 +12,7 @@ from prediction.simple_batch_generator import SimpleBatchGenerator
 
 from eval.eval import evaluate_ranking
 
-DEGREE = 8  # a constant to define number of hidden units
+DEGREE = 8  # a constant to define the number of hidden units
 NUM_CLASSES = 2
 
 
@@ -127,9 +127,9 @@ def main():
     Runs training of a tf model.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', help='folder containing train, dev and test subfolders, '
-                                           'each subfolder should contain pairs.txt, labels.txt, '
-                                           'indices.txt', default='~/Data/doc2vec_inferred')
+    parser.add_argument('--data_dir', help='folder containing "train", "dev" and "test" files, '
+                                           'each file should have tab separated: label, question_id '
+                                           'and a feature vector', default='fake_data')
     parser.add_argument('--num_layers', help='number of hidden layers, either this or number of '
                                              'units should be specified', type=int, default=2)
     parser.add_argument('--units',
@@ -156,7 +156,8 @@ def main():
                         help='how often (in steps) the evaluation on the dev set is '
                              'performed, default: 1000', type=int, default=400)
 
-    parser.add_argument('--output', type=str, default='')
+    parser.add_argument('--output', type=str, default='output folder where the model and the '
+                                                      'predictions are saved')
 
     parser.add_argument('--verbose', dest='verbose', action='store_true')
     parser.set_defaults(verbose=False)
